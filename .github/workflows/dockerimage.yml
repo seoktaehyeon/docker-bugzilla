@@ -4,7 +4,7 @@ on:
   - push
 
 env:
-  IMG: bxwill/python
+  IMG: bxwill/bugzilla
 
 jobs:
 
