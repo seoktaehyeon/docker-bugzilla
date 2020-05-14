@@ -10,7 +10,7 @@ function log_note
 
 function log_succeed
 {
-    echo -e "\033[32;6m [ SUCCEED ] $@ \n \033[0m" 
+    echo -e "\033[32;6m [ PASS ] $@ \n \033[0m" 
     return 0
 }
 
@@ -25,43 +25,56 @@ cd /var/www/html/bugzilla
 
 log_note "Check Variables ..."
 [[ -z "${BUGZILLA_ADMIN_EMAIL}" ]] && log_error "BUGZILLA_ADMIN_EMAIL is required"
-log_succeed "BUGZILLA_ADMIN_EMAIL [${BUGZILLA_ADMIN_EMAIL}] ... PASS"
+log_succeed "BUGZILLA_ADMIN_EMAIL [${BUGZILLA_ADMIN_EMAIL}]"
 
 [[ -z "${BUGZILLA_ADMIN_NAME}" ]] && log_error "BUGZILLA_ADMIN_NAME is required"
-log_succeed "BUGZILLA_ADMIN_NAME [${BUGZILLA_ADMIN_NAME}] ... PASS"
+log_succeed "BUGZILLA_ADMIN_NAME [${BUGZILLA_ADMIN_NAME}]"
 
 [[ -z "${BUGZILLA_ADMIN_PASS}" ]] && log_error "BUGZILLA_ADMIN_PASS is required"
-log_succeed "BUGZILLA_ADMIN_PASS [${BUGZILLA_ADMIN_PASS}]... PASS"
+log_succeed "BUGZILLA_ADMIN_PASS [${BUGZILLA_ADMIN_PASS}]"
 
 [[ -z "${BUGZILLA_DB_DRIVER}" ]] && BUGZILLA_DB_DRIVER='Pg'
-log_succeed "BUGZILLA_DB_DRIVER [${BUGZILLA_DB_DRIVER}] ... PASS"
+log_succeed "BUGZILLA_DB_DRIVER [${BUGZILLA_DB_DRIVER}]"
 
 [[ -z "${BUGZILLA_DB_HOST}" ]] && BUGZILLA_DB_HOST='bugzilla-db'
-log_succeed "BUGZILLA_DB_HOST [${BUGZILLA_DB_HOST}] ... PASS"
+log_succeed "BUGZILLA_DB_HOST [${BUGZILLA_DB_HOST}]"
+
+[[ -z "${BUGZILLA_DB_PORT}" ]] && BUGZILLA_DB_PORT='5432'
+log_succeed "BUGZILLA_DB_PORT [${BUGZILLA_DB_PORT}]"
 
 [[ -z "${BUGZILLA_DB_NAME}" ]] && BUGZILLA_DB_NAME='bugs'
-log_succeed "BUGZILLA_DB_NAME [${BUGZILLA_DB_NAME}] ... PASS"
+log_succeed "BUGZILLA_DB_NAME [${BUGZILLA_DB_NAME}]"
 
 [[ -z "${BUGZILLA_DB_USER}" ]] && BUGZILLA_DB_USER='bugs'
-log_succeed "BUGZILLA_DB_USER [${BUGZILLA_DB_USER}] ... PASS"
+log_succeed "BUGZILLA_DB_USER [${BUGZILLA_DB_USER}]"
 
 [[ -z "${BUGZILLA_DB_PASS}" ]] && BUGZILLA_DB_PASS='bugs'
-log_succeed "BUGZILLA_DB_PASS [${BUGZILLA_DB_PASS}] ... PASS"
+log_succeed "BUGZILLA_DB_PASS [${BUGZILLA_DB_PASS}]"
 
 log_note "Update Bugzilla Local Config"
 sed -i "s/\$webservergroup.*/\$webservergroup='www-data';/" localconfig
+log_succeed "webservergroup change to [www-data]"
 sed -i "s/\$db_driver.*/\$db_driver='${BUGZILLA_DB_DRIVER}';/" localconfig 
+log_succeed "db_driver change to [${BUGZILLA_DB_DRIVER}]"
 sed -i "s/\$db_host.*/\$db_host='${BUGZILLA_DB_HOST}';/" localconfig 
+log_succeed "db_host change to [${BUGZILLA_DB_HOST}]"
+sed -i "s/\$db_port.*/\$db_port=${BUGZILLA_DB_PORT};/" localconfig
+log_succeed "db_port change to [${BUGZILLA_DB_PORT}]"
 sed -i "s/\$db_name.*/\$db_name='${BUGZILLA_DB_NAME}';/" localconfig
+log_succeed "db_name change to [${BUGZILLA_DB_NAME}]"
 sed -i "s/\$db_user.*/\$db_user='${BUGZILLA_DB_USER}';/" localconfig
+log_succeed "db_user change to [${BUGZILLA_DB_USER}]"
 sed -i "s/\$db_pass.*/\$db_pass='${BUGZILLA_DB_PASS}';/" localconfig
+log_succeed "db_pass change to [${BUGZILLA_DB_PASS}]"
 
 log_note "Restart Apache Service"
 service apache2 restart
 (( $? == 0 )) || log_error "Restart apache failed"
+log_succeed "Succeed to restart Apache"
 
 log_note "Check Bugzilla Setup"
 (sleep 20; echo "${BUGZILLA_ADMIN_EMAIL}"; sleep 2; echo "${BUGZILLA_ADMIN_NAME}"; sleep 2; echo "${BUGZILLA_ADMIN_PASS}") | ./checksetup.pl
+(( $? ==0 )) && log_succeed "Succeed to check setup"
 
-log_note "Check Bugzilla Service"
+log_note "Bugzilla Service"
 tail -f /var/log/apache2/access.log
