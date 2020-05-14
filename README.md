@@ -42,4 +42,3 @@ services:
 Waiting for bugzilla container healthy
 
 http://localhost/bugzilla
-
