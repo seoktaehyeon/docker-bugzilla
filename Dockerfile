@@ -1,8 +1,10 @@
 FROM ubuntu:18.04
 LABEL maintainer="v.stone@163.com" \
-      organization="Truth & Insurance Office"
+      organization="Truth & Insurance Office" \
+      github="https://github.com/bugzilla/bugzilla" \
+      website="https://www.bugzilla.org"
 
-ADD https://ftp.mozilla.org/pub/mozilla.org/webtools/bugzilla-5.0.6.tar.gz /opt/bugzilla.tar.gz
+ADD https://github.com/bugzilla/bugzilla/archive/release-5.0.6.tar.gz /opt/bugzilla.tar.gz
 COPY ./bugzilla.conf /opt/bugzilla.conf
 COPY ./start-bugzilla /usr/local/bin/start-bugzilla
 COPY ./check-bugzilla /usr/local/bin/check-bugzilla
