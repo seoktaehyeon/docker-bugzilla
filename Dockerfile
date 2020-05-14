@@ -14,8 +14,8 @@ RUN apt update && \
     apt install -y gcc make apache2 libpq-dev curl && \
     mv /opt/bugzilla.conf /etc/apache2/sites-available/bugzilla.conf && \
     cd /opt && \
-    tar zvxf /bugzilla.tar.gz && \
-    rm -rf /bugzilla.tar.gz && \
+    tar zvxf bugzilla.tar.gz && \
+    rm -rf bugzilla.tar.gz && \
     bugzilla_root_dir=$(ls) && \
     mv /opt/${bugzilla_root_dir} /var/www/html/bugzilla && \
     cd /var/www/html/bugzilla && \
