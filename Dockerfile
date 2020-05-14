@@ -4,7 +4,7 @@ LABEL maintainer="v.stone@163.com" \
       github="https://github.com/bugzilla/bugzilla" \
       website="https://www.bugzilla.org"
 
-ADD https://github.com/bugzilla/bugzilla/archive/release-5.0.6.tar.gz /opt/bugzilla.tar.gz
+ADD https://github.com/bugzilla/bugzilla/archive/release-5.1.2.tar.gz /opt/bugzilla.tar.gz
 COPY ./bugzilla.conf /opt/bugzilla.conf
 COPY ./start-bugzilla /usr/local/bin/start-bugzilla
 COPY ./check-bugzilla /usr/local/bin/check-bugzilla
