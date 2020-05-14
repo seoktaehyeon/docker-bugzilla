@@ -2,6 +2,12 @@
 # Author: v.stone@163.com
 #set -ex
 
+function log_note
+{
+    echo -e "\033[34;6m $@ \033[0m"
+    return 0
+}
+
 function log_succeed
 {
     echo -e "\033[32;6m [ SUCCEED ] $@ \n \033[0m" 
@@ -17,17 +23,32 @@ function log_error
 # Main
 cd /var/www/html/bugzilla
 
-echo "Check Variables ..."
+log_note "Check Variables ..."
 [[ -z "${BUGZILLA_ADMIN_EMAIL}" ]] && log_error "BUGZILLA_ADMIN_EMAIL is required"
-[[ -z "${BUGZILLA_ADMIN_NAME}" ]] && log_error "BUGZILLA_ADMIN_NAME is required"
-[[ -z "${BUGZILLA_ADMIN_PASS}" ]] && log_error "BUGZILLA_ADMIN_PASS is required"
-[[ -z "${BUGZILLA_DB_DRIVER}" ]] && BUGZILLA_DB_DRIVER='Pg'
-[[ -z "${BUGZILLA_DB_HOST}" ]] && BUGZILLA_DB_HOST='bugzilla-db'
-[[ -z "${BUGZILLA_DB_NAME}" ]] && BUGZILLA_DB_NAME='bugs'
-[[ -z "${BUGZILLA_DB_USER}" ]] && BUGZILLA_DB_USER='bugs'
-[[ -z "${BUGZILLA_DB_PASS}" ]] && BUGZILLA_DB_PASS='bugs'
+log_succeed "BUGZILLA_ADMIN_EMAIL [${BUGZILLA_ADMIN_EMAIL}] ... PASS"
 
-echo "Update Bugzilla Local Config"
+[[ -z "${BUGZILLA_ADMIN_NAME}" ]] && log_error "BUGZILLA_ADMIN_NAME is required"
+log_succeed "BUGZILLA_ADMIN_NAME [${BUGZILLA_ADMIN_NAME}] ... PASS"
+
+[[ -z "${BUGZILLA_ADMIN_PASS}" ]] && log_error "BUGZILLA_ADMIN_PASS is required"
+log_succeed "BUGZILLA_ADMIN_PASS [${BUGZILLA_ADMIN_PASS}]... PASS"
+
+[[ -z "${BUGZILLA_DB_DRIVER}" ]] && BUGZILLA_DB_DRIVER='Pg'
+log_succeed "BUGZILLA_DB_DRIVER [${BUGZILLA_DB_DRIVER}] ... PASS"
+
+[[ -z "${BUGZILLA_DB_HOST}" ]] && BUGZILLA_DB_HOST='bugzilla-db'
+log_succeed "BUGZILLA_DB_HOST [${BUGZILLA_DB_HOST}] ... PASS"
+
+[[ -z "${BUGZILLA_DB_NAME}" ]] && BUGZILLA_DB_NAME='bugs'
+log_succeed "BUGZILLA_DB_NAME [${BUGZILLA_DB_NAME}] ... PASS"
+
+[[ -z "${BUGZILLA_DB_USER}" ]] && BUGZILLA_DB_USER='bugs'
+log_succeed "BUGZILLA_DB_USER [${BUGZILLA_DB_USER}] ... PASS"
+
+[[ -z "${BUGZILLA_DB_PASS}" ]] && BUGZILLA_DB_PASS='bugs'
+log_succeed "BUGZILLA_DB_PASS [${BUGZILLA_DB_PASS}] ... PASS"
+
+log_note "Update Bugzilla Local Config"
 sed -i "s/\$webservergroup.*/\$webservergroup='www-data';/" localconfig
 sed -i "s/\$db_driver.*/\$db_driver='${BUGZILLA_DB_DRIVER}';/" localconfig 
 sed -i "s/\$db_host.*/\$db_host='${BUGZILLA_DB_HOST}';/" localconfig 
@@ -35,16 +56,12 @@ sed -i "s/\$db_name.*/\$db_name='${BUGZILLA_DB_NAME}';/" localconfig
 sed -i "s/\$db_user.*/\$db_user='${BUGZILLA_DB_USER}';/" localconfig
 sed -i "s/\$db_pass.*/\$db_pass='${BUGZILLA_DB_PASS}';/" localconfig
 
-echo "Restart Apache Service"
+log_note "Restart Apache Service"
 service apache2 restart
 (( $? == 0 )) || log_error "Restart apache failed"
 
-echo "Check Bugzilla Setup"
+log_note "Check Bugzilla Setup"
 (sleep 20; echo "${BUGZILLA_ADMIN_EMAIL}"; sleep 2; echo "${BUGZILLA_ADMIN_NAME}"; sleep 2; echo "${BUGZILLA_ADMIN_PASS}") | ./checksetup.pl
 
-echo "Check Bugzilla Service"
-while true
-do
-    sleep 10
-    curl --head http://127.0.0.1/bugzilla/
-done
+log_note "Check Bugzilla Service"
+tail -f /var/log/apache2/access.log

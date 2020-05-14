@@ -1,0 +1,3 @@
+#!/bin/bash
+output=$(curl -s --head http://127.0.0.1/bugzilla/)
+echo "$output" | head -1 | grep 200
