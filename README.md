@@ -3,6 +3,7 @@
 ```yaml
 version: '2'
 services:
+
   bugzilla-db:
     container_name: bugzilla-db
     image: postgres:10
@@ -15,6 +16,7 @@ services:
       POSTGRES_DB: "bugs"
       POSTGRES_USER: "bugs"
       POSTGRES_PASSWORD: "bugs"
+
   bugzilla-svc:
     container_name: bugzilla-svc
     image: bxwill/bugzilla:5.0.6
