@@ -4,7 +4,9 @@ on:
   - push
 
 env:
-  IMG: bxwill/bugzilla
+  ALI_REGISTRY: registry.cn-hangzhou.aliyuncs.com
+  IMG_REPO: bxwill
+  IMG_NAME: bugzilla
 
 jobs:
 
@@ -18,8 +20,46 @@ jobs:
         submodules: true
     - name: Build the Docker image
       run: |
-        TAG=$(echo "${{ github.ref }}" | awk -F '/' '{print $NF}')
-        [[ "${TAG}" == "master" ]] && exit 0
-        docker build . --file Dockerfile --tag ${IMG}:${TAG}
+        echo -e "\nLogin docker registry"
         echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
-        docker push ${IMG}:${TAG}
+        echo "${{ secrets.ALI_DC_PASSWORD }}" | docker login -u ${{ secrets.ALI_DC_USER }} --password-stdin ${ALI_REGISTRY}
+
+        echo -e "\nCheck branchs/tags\n"
+        git_ref_type=$(echo "${{ github.ref }}" | awk -F '/' '{print $2}')
+        if [[ "${git_ref_type}" == "heads" ]]; then
+            git_ref_type="branch"
+        elif [[ "${git_ref_type}" == "tags" ]]; then
+            git_ref_type="tag"
+        fi
+        git_ref_name=$(echo "${{ github.ref }}" | awk -F '/' '{print $NF}')
+        echo -e "\nTriggered by ${git_ref_type} ${git_ref_name}\n"
+
+        if [[ "${git_ref_type}" == "branch" ]]; then
+            if [[ "${git_ref_name}" == "master" ]]; then
+                echo -e "Skip build since master branch"
+                exit 0
+            fi
+        fi 
+
+        echo -e "\nBuild and push image ${IMG_REPO}/${IMG_NAME}:${git_ref_name}\n"
+        docker build . --file Dockerfile --tag ${IMG_REPO}/${IMG_NAME}:${git_ref_name}
+        docker push ${IMG_REPO}/${IMG_NAME}:${git_ref_name}
+        echo -e "\nRetag and push image ${ALI_REGISTRY}/${IMG_REPO}/${IMG_NAME}:${git_ref_name}\n"
+        docker tag ${IMG_REPO}/${IMG_NAME}:${git_ref_name} ${ALI_REGISTRY}/${IMG_REPO}/${IMG_NAME}:${git_ref_name}
+        docker push ${ALI_REGISTRY}/${IMG_REPO}/${IMG_NAME}:${git_ref_name}
+
+        if [[ "${git_ref_type}" == "tag" ]]; then
+            retag_xy=$(echo ${git_ref_name} | awk -F '.' '{print $1"."$2}')
+            retag_x=$(echo ${git_ref_name} | awk -F '.' '{print $1}')
+            retag_latest="latest"
+            for retag in "${retag_xx}" "${retag_x}" "${retag_latest}"
+            do
+                [[ -z "${retag}" ]] && continue
+                echo -e "\nRetag ${IMG_REPO}/${IMG_NAME}:${git_ref_name} to ${IMG_REPO}/${IMG_NAME}:${retag} and push it\n"
+                docker tag ${IMG_REPO}/${IMG_NAME}:${git_ref_name} ${IMG_REPO}/${IMG_NAME}:${retag} 
+                docker push ${IMG_REPO}/${IMG_NAME}:${retag} 
+                echo -e "\nRetag ${IMG_REPO}/${IMG_NAME}:${git_ref_name} to ${ALI_REGISTRY}/${IMG_REPO}/${IMG_NAME}:${retag} and push it\n"
+                docker tag ${IMG_REPO}/${IMG_NAME}:${git_ref_name} ${ALI_REGISTRY}/${IMG_REPO}/${IMG_NAME}:${retag}
+                docker push ${ALI_REGISTRY}/${IMG_REPO}/${IMG_NAME}:${retag}
+            done
+        fi
